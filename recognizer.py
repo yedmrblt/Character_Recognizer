@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+sig = lambda t: 1/(1+np.exp(-t))
+
 def image2Vector(path):
     # Load image and turn into grayscaled image
     image = cv2.imread(path)
@@ -16,7 +18,42 @@ def image2Vector(path):
     return image_array
 
 
+def train(X, y, epoch, path_size, layer_1_w, layer_2_w, layer_3_w):
+    for epoch in xrange(0, epoch):
+        for j in xrange(0, path_size):
+            x = X[j, np.newaxis]
+            layer_1 = sig(np.dot(x, layer_1_w))
+            layer_2 = sig(np.dot(layer_1, layer_2_w))
+            layer_3 = sig(np.dot(layer_2, layer_3_w))
+
+            layer_3_delta = (layer_3 - y[j, np.newaxis])*(layer_3)*(1-layer_3)
+            layer_2_delta = np.dot(layer_3_delta, layer_3_w.T) * (layer_2)*(1-layer_2)
+            layer_1_delta = np.dot(layer_2_delta, layer_2_w.T) * (layer_1)*(1-layer_1)
+
+            layer_3_w -= np.dot(layer_2.T, layer_3_delta)
+            layer_2_w -= np.dot(layer_1.T, layer_2_delta)
+            layer_1_w -= np.dot(x.T, layer_1_delta)
+
+
+def test(test_x):
+    test_layer_1 = sig(np.dot(test_x, layer_1_w))
+    test_layer_2 = sig(np.dot(test_layer_1, layer_2_w))
+    test_layer_3 = sig(np.dot(test_layer_2, layer_3_w))
+    print(test_layer_3)
+
+
+############### MAIN ##############
+
 X = np.zeros((20, 901)) # Array full of input
+y = np.array([ [1,0,0,0], [1,0,0,0], [1,0,0,0], [1,0,0,0], [1,0,0,0],
+               [0,1,0,0], [0,1,0,0], [0,1,0,0], [0,1,0,0], [0,1,0,0],
+               [0,0,1,0], [0,0,1,0], [0,0,1,0], [0,0,1,0], [0,0,1,0],
+               [0,0,0,1], [0,0,0,1], [0,0,0,1], [0,0,0,1], [0,0,0,1] ])
+
+#y = np.array([ [0,0], [0,0], [0,0], [0,0], [0,0],
+#               [0,1], [0,1], [0,1], [0,1], [0,1],
+#               [1,0], [1,0], [1,0], [1,0], [1,0],
+#               [1,1], [1,1], [1,1], [1,1], [1,1] ])
 # Train paths
 paths = np.array(['d_1.png', 'd_2.png', 'd_3.png', 'd_4.png', 'd_5.png',
                   'e_1.png', 'e_2.png', 'e_3.png', 'e_4.png', 'e_5.png',
@@ -25,4 +62,11 @@ paths = np.array(['d_1.png', 'd_2.png', 'd_3.png', 'd_4.png', 'd_5.png',
 for i in xrange(0, paths.size):
     a = image2Vector('images/train/' + paths[i])
     X[i] = a
-print X
+
+
+layer_1_w = np.zeros((901,7))
+layer_2_w = np.zeros((7,6))
+layer_3_w = np.zeros((6,4))
+train(X, y, 2000, paths.size, layer_1_w, layer_2_w, layer_3_w)
+test_image = image2Vector('images/test/i_7.png')
+test(test_image)
