@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 sig = lambda t: 1/(1+np.exp(-t))
 
@@ -19,12 +20,15 @@ def image2Vector(path):
 
 
 def train(X, y, epoch, path_size, layer_1_w, layer_2_w, layer_3_w):
+    mse_array = np.empty((0))
     for epoch in xrange(0, epoch):
         for j in xrange(0, path_size):
             x = X[j, np.newaxis]
             layer_1 = sig(np.dot(x, layer_1_w))
             layer_2 = sig(np.dot(layer_1, layer_2_w))
             layer_3 = sig(np.dot(layer_2, layer_3_w))
+
+
 
             layer_3_delta = (layer_3 - y[j, np.newaxis])*(layer_3)*(1-layer_3)
             layer_2_delta = np.dot(layer_3_delta, layer_3_w.T) * (layer_2)*(1-layer_2)
@@ -33,9 +37,13 @@ def train(X, y, epoch, path_size, layer_1_w, layer_2_w, layer_3_w):
             layer_3_w -= np.dot(layer_2.T, layer_3_delta)
             layer_2_w -= np.dot(layer_1.T, layer_2_delta)
             layer_1_w -= np.dot(x.T, layer_1_delta)
+        mse = ((y[j, np.newaxis] - layer_3) ** 2).mean(axis=1)
+        mse_array = np.append(mse_array, mse)
+    return mse_array
 
 
-def test(test_x):
+
+def test(test_x, layer_1_w, layer_2_w, layer_3_w):
     test_layer_1 = sig(np.dot(test_x, layer_1_w))
     test_layer_2 = sig(np.dot(test_layer_1, layer_2_w))
     test_layer_3 = sig(np.dot(test_layer_2, layer_3_w))
@@ -67,6 +75,13 @@ for i in xrange(0, paths.size):
 layer_1_w = np.zeros((901,7))
 layer_2_w = np.zeros((7,6))
 layer_3_w = np.zeros((6,4))
-train(X, y, 2000, paths.size, layer_1_w, layer_2_w, layer_3_w)
-test_image = image2Vector('images/test/i_7.png')
-test(test_image)
+
+mse_array = train(X, y, 2000, paths.size, layer_1_w, layer_2_w, layer_3_w)
+x_axis = np.arange(1, 2001, 1);
+y_axis = mse_array
+plt.plot(x_axis, y_axis, 'ro')
+
+
+test_image = image2Vector('images/train/d_2.png')
+test(test_image, layer_1_w, layer_2_w, layer_3_w)
+plt.show()
