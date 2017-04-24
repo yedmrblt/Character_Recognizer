@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.neural_network import MLPClassifier
 
 sig = lambda t: 1/(1+np.exp(-t))
 
@@ -50,6 +51,26 @@ def test(test_x, layer_1_w, layer_2_w, layer_3_w):
     print(test_layer_3)
 
 
+
+def runMLPClasssifier(X, y, test_image):
+    mlp = MLPClassifier(hidden_layer_sizes=(7, 6), activation='logistic')
+    mlp.max_iter = 2000
+    mlp.fit(X, y)
+
+    predictions = mlp.predict_proba([test_image])
+    print(predictions)
+
+def runBackProp(X, y, epoch, path_size, layer_1_w, layer_2_w, layer_3_w, test_image):
+    mse_array = train(X, y, 2000, paths.size, layer_1_w, layer_2_w, layer_3_w)
+    test(test_image, layer_1_w, layer_2_w, layer_3_w)
+    showPlot(mse_array)
+
+def showPlot(y_axis):
+    x_axis = np.arange(1, 2001, 1);
+    #y_axis = mse_array
+    plt.plot(x_axis, y_axis, 'ro')
+    plt.show()
+
 ############### MAIN ##############
 
 X = np.zeros((20, 901)) # Array full of input
@@ -58,10 +79,6 @@ y = np.array([ [1,0,0,0], [1,0,0,0], [1,0,0,0], [1,0,0,0], [1,0,0,0],
                [0,0,1,0], [0,0,1,0], [0,0,1,0], [0,0,1,0], [0,0,1,0],
                [0,0,0,1], [0,0,0,1], [0,0,0,1], [0,0,0,1], [0,0,0,1] ])
 
-#y = np.array([ [0,0], [0,0], [0,0], [0,0], [0,0],
-#               [0,1], [0,1], [0,1], [0,1], [0,1],
-#               [1,0], [1,0], [1,0], [1,0], [1,0],
-#               [1,1], [1,1], [1,1], [1,1], [1,1] ])
 # Train paths
 paths = np.array(['d_1.png', 'd_2.png', 'd_3.png', 'd_4.png', 'd_5.png',
                   'e_1.png', 'e_2.png', 'e_3.png', 'e_4.png', 'e_5.png',
@@ -76,12 +93,7 @@ layer_1_w = np.zeros((901,7))
 layer_2_w = np.zeros((7,6))
 layer_3_w = np.zeros((6,4))
 
-mse_array = train(X, y, 2000, paths.size, layer_1_w, layer_2_w, layer_3_w)
-x_axis = np.arange(1, 2001, 1);
-y_axis = mse_array
-plt.plot(x_axis, y_axis, 'ro')
+test_image = image2Vector('images/test/e_6.png')
 
-
-test_image = image2Vector('images/train/d_2.png')
-test(test_image, layer_1_w, layer_2_w, layer_3_w)
-plt.show()
+runBackProp(X, y, 2000, paths.size, layer_1_w, layer_2_w, layer_3_w, test_image)
+runMLPClasssifier(X, y, test_image)
